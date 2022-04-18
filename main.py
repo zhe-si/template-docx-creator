@@ -104,7 +104,7 @@ def check_template(file_path: str, insert_operation: callable) -> dict:
     insert_points = {}
 
     for paragraph in document.paragraphs:
-        for p_run in paragraph.runs:
+        for p_run_index, p_run in enumerate(paragraph.runs):
             run_insert_points = _content_label_re.findall(p_run.text)
             for point in run_insert_points:
                 # 内容标签格式检查
@@ -116,7 +116,7 @@ def check_template(file_path: str, insert_operation: callable) -> dict:
                 if point_type not in insert_point_types:
                     continue
 
-                point_data = {'name': point_name, 'type': point_type, 'text': '{{' + point + '}}', 'run': p_run, 'paragraph': paragraph, 'document': document}
+                point_data = {'name': point_name, 'type': point_type, 'text': '{{' + point + '}}', 'run': p_run, 'run_index': p_run_index, 'paragraph': paragraph, 'document': document}
 
                 # 插入点信息处理
                 if not insert_operation(point_data):
@@ -146,9 +146,10 @@ def main():
         'u1': ['ul1', 'ul2', 'ul3'],
         'img1': ('this is img1', 'data/p1.jpg'),
         'img2': ('1号壁纸', 'data/p1.jpg'),
+        'l1': ('link1', 'https://www.baidu.com'),
     }
 
-    match("data/t0.docx", "data/r0.docx", datas)
+    match("data/t0.docx", "data/r1.docx", datas)
 
 
 if __name__ == '__main__':

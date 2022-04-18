@@ -269,3 +269,34 @@ class ImageLabel(Label):
 
 
 LabelManager.register(ImageLabel)
+
+
+class LinkLabel(Label):
+    @classmethod
+    def get_type(cls) -> str:
+        return 'link'
+
+    @classmethod
+    def has_content(cls) -> bool:
+        return True
+
+    @classmethod
+    def register_static_datas(cls, static_datas: dict) -> None:
+        pass
+
+    @classmethod
+    def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
+        """将包含标签的 run 替换为 link"""
+        link_n, link_url = data
+        paragraph = point_data['paragraph']
+        run_index = point_data['run_index']
+        # add_hyperlink(paragraph, link_n, link_url)
+        set_hyperlink(run_index, paragraph, link_n, link_url)
+
+    @classmethod
+    def check_data_type(cls, data: Any) -> bool:
+        """要求data是tuple，第一个元素是链接名称，第二个元素是链接url"""
+        return isinstance(data, tuple) and len(data) == 2 and isinstance(data[0], str) and isinstance(data[1], str)
+
+
+LabelManager.register(LinkLabel)

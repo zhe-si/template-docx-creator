@@ -1,4 +1,8 @@
 from docx import Document
+from docx.enum.dml import MSO_THEME_COLOR_INDEX
+from docx.opc.constants import RELATIONSHIP_TYPE
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from docx.text import font
 from docx.text.paragraph import Paragraph
 from docx.text.parfmt import ParagraphFormat
@@ -67,3 +71,35 @@ def delete_paragraph(paragraph: [Paragraph, Run]):
     p = paragraph._element
     p.getparent().remove(p)
     paragraph._p = paragraph._element = None
+
+
+def add_hyperlink(paragraph: Paragraph, text: str, url: str):
+    """给段落末尾添加超链接
+
+    :param paragraph: 追加的段落
+    :param text: 文本
+    :param url: 链接
+    """
+    r_id = paragraph.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True)  # 关联超链接
+    hyperlink = OxmlElement('w:hyperlink')
+    hyperlink.set(qn('r:id'), r_id)
+    run = paragraph.add_run(text)
+    run.font.color.theme_color = MSO_THEME_COLOR_INDEX.HYPERLINK
+    run.font.underline = True
+    hyperlink.append(run._r)
+    paragraph._element.append(hyperlink)
+    return hyperlink
+
+
+def set_hyperlink(run_index: int, paragraph: Paragraph, text: str, url: str):
+    """设置 paragraph 为超链接"""
+    run = paragraph.runs[run_index]
+    r_id = paragraph.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True)  # 关联超链接
+    hyperlink = OxmlElement('w:hyperlink')
+    hyperlink.set(qn('r:id'), r_id)
+    run.text = text
+    run.font.color.theme_color = MSO_THEME_COLOR_INDEX.HYPERLINK
+    run.font.underline = True
+    hyperlink.append(run._r)
+    paragraph._element.append(hyperlink)
+    return hyperlink

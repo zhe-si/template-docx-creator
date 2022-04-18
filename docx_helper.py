@@ -62,7 +62,7 @@ def copy_paragraph_style(to_paragraph: Paragraph, from_paragraph: Paragraph, fro
         copy_run_style(from_run, run)
 
 
-def delete_paragraph(paragraph: Paragraph):
+def delete_paragraph(paragraph: [Paragraph, Run]):
     """删除段落"""
     p = paragraph._element
     p.getparent().remove(p)

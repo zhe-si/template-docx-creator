@@ -2,6 +2,9 @@ import time
 from abc import ABCMeta, abstractmethod
 from typing import Any, List
 
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+
+import image_size
 from docx_helper import *
 
 
@@ -210,3 +213,59 @@ class UnorderedListLabel(Label):
 
 
 LabelManager.register(UnorderedListLabel)
+
+
+class ImageLabel(Label):
+    @classmethod
+    def get_type(cls) -> str:
+        return 'image'
+
+    @classmethod
+    def has_content(cls) -> bool:
+        return True
+
+    @classmethod
+    def register_static_datas(cls, static_datas: dict) -> None:
+        pass
+
+    @classmethod
+    def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
+        """当前仅支持url为本地路径的图片，且图片单独成段"""
+        pic_desc, pic_url = data
+        document = point_data['document']
+        paragraph = point_data['paragraph']
+        run = point_data['run']
+
+        # 默认某方向完全填充文档自动调整图片大小
+        # 默认使用第一节的宽高当作整个文档的宽高
+        d_section = document.sections[0]
+        doc_height, doc_width = d_section.page_height, d_section.page_width
+        l_margin, r_margin, t_margin, b_margin = d_section.left_margin, d_section.right_margin, d_section.top_margin, d_section.bottom_margin
+        max_height = doc_height - t_margin - b_margin
+        max_width = doc_width - l_margin - r_margin
+        img_width, img_height = image_size.get(pic_url)
+
+        limit_doc_width = True
+        if doc_width / doc_height > img_width / img_height:
+            limit_doc_width = False
+
+        ip = paragraph.insert_paragraph_before()
+        ir = ip.add_run()
+        if limit_doc_width:
+            ir.add_picture(pic_url, width=max_width)
+        else:
+            ir.add_picture(pic_url, height=max_height)
+
+        if pic_desc is None:
+            delete_paragraph(paragraph)
+        else:
+            run.text = pic_desc
+            paragraph.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    @classmethod
+    def check_data_type(cls, data: Any) -> bool:
+        """要求data为tuple，第一个元素是描述字符串，第二个元素是图片url"""
+        return isinstance(data, tuple) and len(data) == 2 and (isinstance(data[0], str) or data[0] is None) and isinstance(data[1], str)
+
+
+LabelManager.register(ImageLabel)

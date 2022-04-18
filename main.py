@@ -116,7 +116,7 @@ def check_template(file_path: str, insert_operation: callable) -> dict:
                 if point_type not in insert_point_types:
                     continue
 
-                point_data = {'name': point_name, 'type': point_type, 'text': '{{' + point + '}}', 'run': p_run, 'paragraph': paragraph}
+                point_data = {'name': point_name, 'type': point_type, 'text': '{{' + point + '}}', 'run': p_run, 'paragraph': paragraph, 'document': document}
 
                 # 插入点信息处理
                 if not insert_operation(point_data):
@@ -128,6 +128,8 @@ def check_template(file_path: str, insert_operation: callable) -> dict:
 
 
 def print_no_data_points(no_data_points):
+    if len(no_data_points) == 0:
+        return
     print("无数据对应的内容标签：")
     i = 1
     for point_name, point_data in no_data_points.items():
@@ -142,9 +144,11 @@ def main():
         't4': 'tt4',
         'o1': ['ol1', 'ol2', 'ol3'],
         'u1': ['ul1', 'ul2', 'ul3'],
+        'img1': ('this is img1', 'data/p1.jpg'),
+        'img2': ('1号壁纸', 'data/p1.jpg'),
     }
 
-    match("data/t2.docx", "data/r2.docx", datas)
+    match("data/t0.docx", "data/r0.docx", datas)
 
 
 if __name__ == '__main__':

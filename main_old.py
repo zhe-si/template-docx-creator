@@ -44,14 +44,21 @@ def main():
         't2': 'tt2',
         't3': 'tt3',
         't4': 'tt4',
+        'o1': ['o11', 'o12', 'o13'],
     }
 
     no_data_points = {}
 
     for p_n, p_d in insert_points.items():
         if p_n in datas:
-            t = p_d['run'].text.replace(p_d['text'], datas[p_n])
-            p_d['run'].text = t
+            if p_d['type'] == 'text':
+                t = p_d['run'].text.replace(p_d['text'], datas[p_n])
+                p_d['run'].text = t
+            elif p_d['type'] == 'ordered-list':
+                print()
+                pass
+            else:
+                raise Exception('solve error')
         else:
             no_data_points[p_n] = p_d
 

@@ -5,6 +5,7 @@ from docx import Document
 
 import labels
 
+
 _content_label_re = re.compile(r'{{(.*?)}}')
 
 registered_labels = {label.get_type(): label for label in labels.LabelManager.get_labels()}
@@ -115,7 +116,7 @@ def check_template(file_path: str, insert_operation: callable) -> dict:
                 if point_type not in insert_point_types:
                     continue
 
-                point_data = {'name': point_name, 'type': point_type, 'run': p_run, 'text': '{{' + point + '}}'}
+                point_data = {'name': point_name, 'type': point_type, 'text': '{{' + point + '}}', 'run': p_run, 'paragraph': paragraph}
 
                 # 插入点信息处理
                 if not insert_operation(point_data):
@@ -139,6 +140,8 @@ def main():
         't2': 'tt2',
         't3': 'tt3',
         't4': 'tt4',
+        'o1': ['ol1', 'ol2', 'ol3'],
+        'u1': ['ul1', 'ul2', 'ul3'],
     }
 
     match("data/t2.docx", "data/r2.docx", datas)

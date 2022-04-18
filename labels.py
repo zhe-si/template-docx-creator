@@ -2,6 +2,8 @@ import time
 from abc import ABCMeta, abstractmethod
 from typing import Any, List
 
+from docx_helper import *
+
 
 class Label(metaclass=ABCMeta):
     """
@@ -143,3 +145,68 @@ class TimeLabel(Label):
 
 
 LabelManager.register(TimeLabel)
+
+
+class OrderedListLabel(Label):
+    @classmethod
+    def get_type(cls) -> str:
+        return 'ordered-list'
+
+    @classmethod
+    def has_content(cls) -> bool:
+        return True
+
+    @classmethod
+    def register_static_datas(cls, static_datas: dict) -> None:
+        pass
+
+    @classmethod
+    def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
+        paragraph = point_data['paragraph']
+        for i, item in enumerate(data):
+            p = paragraph.insert_paragraph_before(f'{i + 1}. {item}')
+            copy_paragraph_style(p, paragraph)
+        delete_paragraph(paragraph)
+
+    @classmethod
+    def check_data_type(cls, data: Any) -> bool:
+        """要求data是list，且元素是str"""
+        return isinstance(data, list) and all([isinstance(d, str) for d in data])
+
+
+LabelManager.register(OrderedListLabel)
+
+
+class UnorderedListLabel(Label):
+    _header_chars = {"circle0": "•", "square0": "▪", "disc0": "◦",
+                     "circle1": "●", "square1": "■", "disc1": "○", "diamond1": "◆", "diamond1_e": "◇", }
+    _default_header_char = "circle1"
+    _default_header_gap = 1
+
+    @classmethod
+    def get_type(cls) -> str:
+        return 'unordered-list'
+
+    @classmethod
+    def has_content(cls) -> bool:
+        return True
+
+    @classmethod
+    def register_static_datas(cls, static_datas: dict) -> None:
+        pass
+
+    @classmethod
+    def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
+        paragraph = point_data['paragraph']
+        for i, item in enumerate(data):
+            p = paragraph.insert_paragraph_before(f'{cls._header_chars[cls._default_header_char]}{" " * cls._default_header_gap}{item}')
+            copy_paragraph_style(p, paragraph)
+        delete_paragraph(paragraph)
+
+    @classmethod
+    def check_data_type(cls, data: Any) -> bool:
+        """要求data是list，且元素是str"""
+        return isinstance(data, list) and all([isinstance(d, str) for d in data])
+
+
+LabelManager.register(UnorderedListLabel)

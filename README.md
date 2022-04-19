@@ -24,7 +24,7 @@
     - unordered-list: 无序列表
     - ordered-list: 有序列表
     - image: 图片
-    - table: 表格 (暂不支持)
+    - table: 表格
     - link: 链接
 
 ### 文档生成说明

@@ -3,9 +3,12 @@ from abc import ABCMeta, abstractmethod
 from typing import Any, List
 
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.oxml import CT_Tbl
+from docx.table import Table
 
 import image_size
 from docx_helper import *
+from type_helper import *
 
 
 class Label(metaclass=ABCMeta):
@@ -44,6 +47,26 @@ class Label(metaclass=ABCMeta):
         pass
 
 
+class NoContentLabel(Label, metaclass=ABCMeta):
+    @classmethod
+    def has_content(cls) -> bool:
+        return False
+
+    @classmethod
+    def check_data_type(cls, data: Any) -> bool:
+        return True
+
+
+class ContentLabel(Label, metaclass=ABCMeta):
+    @classmethod
+    def has_content(cls) -> bool:
+        return True
+
+    @classmethod
+    def register_static_datas(cls, static_datas: dict) -> None:
+        pass
+
+
 class LabelManager:
     __labels = []
 
@@ -64,20 +87,12 @@ class LabelManager:
         print(f'有内容类型有：{[l.get_type() for l in cls.__labels if l.has_content()]}')
 
 
-class TextLabel(Label):
+class TextLabel(ContentLabel):
     """文本内容标签"""
 
     @classmethod
     def get_type(cls) -> str:
         return 'text'
-
-    @classmethod
-    def has_content(cls) -> bool:
-        return True
-
-    @classmethod
-    def register_static_datas(cls, static_datas: dict) -> None:
-        pass
 
     @classmethod
     def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
@@ -92,14 +107,10 @@ class TextLabel(Label):
 LabelManager.register(TextLabel)
 
 
-class DateLabel(Label):
+class DateLabel(NoContentLabel):
     @classmethod
     def get_type(cls) -> str:
         return 'date'
-
-    @classmethod
-    def has_content(cls) -> bool:
-        return False
 
     @classmethod
     def register_static_datas(cls, static_datas: dict) -> None:
@@ -113,22 +124,14 @@ class DateLabel(Label):
         new_text = point_data['run'].text.replace(point_data['text'], static_datas[point_data['type']])
         point_data['run'].text = new_text
 
-    @classmethod
-    def check_data_type(cls, data: Any) -> bool:
-        return True
-
 
 LabelManager.register(DateLabel)
 
 
-class TimeLabel(Label):
+class TimeLabel(NoContentLabel):
     @classmethod
     def get_type(cls) -> str:
         return 'time'
-
-    @classmethod
-    def has_content(cls) -> bool:
-        return False
 
     @classmethod
     def register_static_datas(cls, static_datas: dict) -> None:
@@ -142,26 +145,14 @@ class TimeLabel(Label):
         new_text = point_data['run'].text.replace(point_data['text'], static_datas[point_data['type']])
         point_data['run'].text = new_text
 
-    @classmethod
-    def check_data_type(cls, data: Any) -> bool:
-        return True
-
 
 LabelManager.register(TimeLabel)
 
 
-class OrderedListLabel(Label):
+class OrderedListLabel(ContentLabel):
     @classmethod
     def get_type(cls) -> str:
         return 'ordered-list'
-
-    @classmethod
-    def has_content(cls) -> bool:
-        return True
-
-    @classmethod
-    def register_static_datas(cls, static_datas: dict) -> None:
-        pass
 
     @classmethod
     def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
@@ -174,13 +165,13 @@ class OrderedListLabel(Label):
     @classmethod
     def check_data_type(cls, data: Any) -> bool:
         """要求data是list，且元素是str"""
-        return isinstance(data, list) and all([isinstance(d, str) for d in data])
+        return isinstance(data, Iterable) and all([isinstance(d, str) for d in data])
 
 
 LabelManager.register(OrderedListLabel)
 
 
-class UnorderedListLabel(Label):
+class UnorderedListLabel(ContentLabel):
     _header_chars = {"circle0": "•", "square0": "▪", "disc0": "◦",
                      "circle1": "●", "square1": "■", "disc1": "○", "diamond1": "◆", "diamond1_e": "◇", }
     _default_header_char = "circle1"
@@ -189,14 +180,6 @@ class UnorderedListLabel(Label):
     @classmethod
     def get_type(cls) -> str:
         return 'unordered-list'
-
-    @classmethod
-    def has_content(cls) -> bool:
-        return True
-
-    @classmethod
-    def register_static_datas(cls, static_datas: dict) -> None:
-        pass
 
     @classmethod
     def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
@@ -209,24 +192,16 @@ class UnorderedListLabel(Label):
     @classmethod
     def check_data_type(cls, data: Any) -> bool:
         """要求data是list，且元素是str"""
-        return isinstance(data, list) and all([isinstance(d, str) for d in data])
+        return isinstance(data, Iterable) and all([isinstance(d, str) for d in data])
 
 
 LabelManager.register(UnorderedListLabel)
 
 
-class ImageLabel(Label):
+class ImageLabel(ContentLabel):
     @classmethod
     def get_type(cls) -> str:
         return 'image'
-
-    @classmethod
-    def has_content(cls) -> bool:
-        return True
-
-    @classmethod
-    def register_static_datas(cls, static_datas: dict) -> None:
-        pass
 
     @classmethod
     def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
@@ -271,18 +246,10 @@ class ImageLabel(Label):
 LabelManager.register(ImageLabel)
 
 
-class LinkLabel(Label):
+class LinkLabel(ContentLabel):
     @classmethod
     def get_type(cls) -> str:
         return 'link'
-
-    @classmethod
-    def has_content(cls) -> bool:
-        return True
-
-    @classmethod
-    def register_static_datas(cls, static_datas: dict) -> None:
-        pass
 
     @classmethod
     def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
@@ -290,7 +257,6 @@ class LinkLabel(Label):
         link_n, link_url = data
         paragraph = point_data['paragraph']
         run_index = point_data['run_index']
-        # add_hyperlink(paragraph, link_n, link_url)
         set_hyperlink(run_index, paragraph, link_n, link_url)
 
     @classmethod
@@ -300,3 +266,44 @@ class LinkLabel(Label):
 
 
 LabelManager.register(LinkLabel)
+
+
+class TableLabel(ContentLabel):
+    @classmethod
+    def get_type(cls) -> str:
+        return 'table'
+
+    @classmethod
+    def insert_data_to_point(cls, point_data: dict, data: Any, static_datas: dict) -> None:
+        """在内容标签的 paragraph 下插入表格，并删除内容标签的 paragraph"""
+        document = point_data['document']
+        paragraph = point_data['paragraph']
+        document_body = document._body
+
+        tbl = CT_Tbl.new_tbl(0, len(data[0]), document._block_width)
+        paragraph._element.addnext(tbl)
+        table = Table(tbl, document_body)
+
+        for row in data:
+            for i, cell in enumerate(table.add_row().cells):
+                cell.text = row[i]
+
+        # 设置表头、列头样式
+        for cell in table.row_cells(0):
+            for r in cell.paragraphs[0].runs:
+                r.bold = True
+        for cell in table.column_cells(0):
+            for r in cell.paragraphs[0].runs:
+                r.bold = True
+
+        delete_paragraph(paragraph)
+
+    @classmethod
+    def check_data_type(cls, data: Any) -> bool:
+        """
+        要求表格数据为二维矩阵 Iterable[Iterable[str]]，默认首行为表头，首列为列头，行/列数都不可为0
+        """
+        return isinstance(data, Iterable) and all(check_iterable_type(i, str) for i in data) and len(data) > 0 and len(data[0]) > 0
+
+
+LabelManager.register(TableLabel)

@@ -1,7 +1,7 @@
 from docx import Document
 from docx.enum.dml import MSO_THEME_COLOR_INDEX
 from docx.opc.constants import RELATIONSHIP_TYPE
-from docx.oxml import OxmlElement
+from docx.oxml import OxmlElement, CT_R, CT_P
 from docx.oxml.ns import qn
 from docx.text import font
 from docx.text.paragraph import Paragraph
@@ -81,25 +81,43 @@ def add_hyperlink(paragraph: Paragraph, text: str, url: str):
     :param url: 链接
     """
     r_id = paragraph.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True)  # 关联超链接
+
     hyperlink = OxmlElement('w:hyperlink')
     hyperlink.set(qn('r:id'), r_id)
+
     run = paragraph.add_run(text)
     run.font.color.theme_color = MSO_THEME_COLOR_INDEX.HYPERLINK
     run.font.underline = True
-    hyperlink.append(run._r)
+    hyperlink.append(run.element)
     paragraph._element.append(hyperlink)
     return hyperlink
 
 
 def set_hyperlink(run_index: int, paragraph: Paragraph, text: str, url: str):
-    """设置 paragraph 为超链接"""
+    """设置 run 为超链接，抹除原内容，添加超链接样式调整，其他样式保留"""
     run = paragraph.runs[run_index]
+
+    # 在 document 的 part （rels文档资源） 中创建一个新的超链接资源并获取其 id
     r_id = paragraph.part.relate_to(url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True)  # 关联超链接
+
+    # 创建一个超链接的ooxml对象并将申请得到的超链接资源 id 作为其 id 属性
     hyperlink = OxmlElement('w:hyperlink')
     hyperlink.set(qn('r:id'), r_id)
-    run.text = text
-    run.font.color.theme_color = MSO_THEME_COLOR_INDEX.HYPERLINK
-    run.font.underline = True
-    hyperlink.append(run._r)
-    paragraph._element.append(hyperlink)
+
+    # 创建链接内的内容 run
+    new_r = OxmlElement('w:r')
+    new_run = Run(new_r, paragraph)
+
+    # 设置链接内容的文本与样式
+    new_run.text = text
+    new_run.font.color.theme_color = MSO_THEME_COLOR_INDEX.HYPERLINK
+    new_run.font.underline = True
+
+    # 将链接内容添加到超链接中
+    hyperlink.append(new_r)
+
+    # 将超链接加到内容标签的run后，并删除内容标签run
+    run.element.addnext(hyperlink)
+    delete_paragraph(run)
+
     return hyperlink

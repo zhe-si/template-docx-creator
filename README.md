@@ -1,5 +1,11 @@
 # 基于模板的 word 自动生成工具
 
+依赖`python-docx`，实现了基于模板对 word 文档的自动生成。本文定义了一种极为简单的模板语法，无学习成本，对非开发人员也极为友好。
+
+Relying on `python-docx`, it realizes the automatic generation of word documents based on templates. This article defines an extremely simple template syntax that has no learning cost and is extremely friendly to non-developers.
+
+
+
 ## 使用方法
 
 ### 步骤

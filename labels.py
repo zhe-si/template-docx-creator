@@ -6,9 +6,9 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import CT_Tbl
 from docx.table import Table
 
-import image_size
-from docx_helper import *
-from type_helper import *
+from helper import image_size
+from helper.docx_helper import *
+from helper.type_helper import *
 
 
 class Label(metaclass=ABCMeta):

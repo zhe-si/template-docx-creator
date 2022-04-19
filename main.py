@@ -4,6 +4,7 @@ from enum import Enum, unique
 from docx import Document
 
 import labels
+from helper.os_helper import *
 
 
 _content_label_re = re.compile(r'{{(.*?)}}')
@@ -110,21 +111,28 @@ def check_template(file_path: str, insert_operation: callable) -> dict:
                 # 内容标签格式检查
                 point_split = point.split(':')
                 if len(point_split) != 2:
-                    return {"code": CheckCode.LABEL_FORMAT_ERROR, "msg": f"内容标签'{point}'格式错误，应该为'{{label_type:label_name}}'，label_name 可省略，但不可省略 ':'", "data": None}
+                    return {"code": CheckCode.LABEL_FORMAT_ERROR,
+                            "msg": f"内容标签'{point}'格式错误，应该为'{{label_type:label_name}}'，label_name 可省略，但不可省略 ':'",
+                            "data": None}
                 point_type, point_name = point_split
                 # 忽略无法识别类型的内容标签
                 if point_type not in insert_point_types:
                     continue
 
-                point_data = {'name': point_name, 'type': point_type, 'text': '{{' + point + '}}', 'run': p_run, 'run_index': p_run_index, 'paragraph': paragraph, 'document': document}
+                point_data = {'name': point_name, 'type': point_type, 'text': '{{' + point + '}}',
+                              'run': p_run, 'run_index': p_run_index, 'paragraph': paragraph, 'document': document}
 
                 # 插入点信息处理
                 if not insert_operation(point_data):
                     if point_name in insert_points:
-                        return {"code": CheckCode.NAME_REPEAT, "msg": f"插入点名称 '{point_name}' 在模板内重复，内容标签为'{point_data['text']}'，原文为'{point_data['run'].text}'", "data": None}
+                        return {"code": CheckCode.NAME_REPEAT,
+                                "msg": f"插入点名称 '{point_name}' 在模板内重复，内容标签为'{point_data['text']}'，原文为'{point_data['run'].text}'",
+                                "data": None}
                     insert_points[point_name] = point_data
 
-    return {"code": CheckCode.SUCCESS, "msg": "successful", "data": {"document": document, "insert_points": insert_points}}
+    return {"code": CheckCode.SUCCESS,
+            "msg": "successful",
+            "data": {"document": document, "insert_points": insert_points}}
 
 
 def print_no_data_points(no_data_points):
@@ -138,24 +146,28 @@ def print_no_data_points(no_data_points):
 
 def main():
     datas = {
-        't1': 'tt1',
-        't2': 'tt2',
-        't3': 'tt3',
-        't4': 'tt4',
-        'o1': ['ol1', 'ol2', 'ol3'],
-        'u1': ['ul1', 'ul2', 'ul3'],
-        'img1': ('this is img1', 'data/p1.jpg'),
-        'img2': ('1号壁纸', 'data/p1.jpg'),
-        'l1': ('link1', 'https://www.baidu.com'),
-        'ta1': [
+        'file_title0': '插入文档的标题',
+        'file_content0': '插入文档的内容，' * 20,
+        'file_content1': '文字的样式保持一致',
+        'file_ul1': ['无序列表内容1', '无序列表内容2', '无序列表内容3', ],
+        'file_ol1': ['有序列表内容1', '有序列表内容1', '有序列表内容1', ],
+        'file_link1': ('百度的链接', 'https://www.baidu.com'),
+        'file_img1': ('这是图片的介绍', 'data/p1.jpg'),
+        'file_table1': [
             ['姓名', '学号', '性别', '班级'],
             ['张三', '123456789', '男', '计算机科学与技术1401'],
             ['李四', '987654321', '男', '软件工程'],
             ['小红', '77777', '女', '软件工程'],
-        ]
+        ],
+        '123': '模板中不存在名字为123的内容标签，该数据自动被忽略',
     }
 
-    match("data/t0.docx", "data/r1.docx", datas)
+    tem_path = "data/template-demo.docx"
+    to_dir = "test_data"
+    word_name = "word.docx"
+    make_sure_path(to_dir)
+
+    match(tem_path, f"{to_dir}/{word_name}", datas)
 
 
 if __name__ == '__main__':

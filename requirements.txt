@@ -1,1 +1,2 @@
 python-docx >= 0.8.11
+chardet >= 4.0.0

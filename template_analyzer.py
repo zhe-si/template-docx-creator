@@ -43,14 +43,19 @@ class TemplateAnalyzer:
     class CheckCode(Enum):
         SUCCESS = 1
         # 严重错误
-        NAME_REPEAT = -1
-        LABEL_FORMAT_ERROR = -2
+        NAME_REPEAT = -1  # 标签名重复
+        LABEL_FORMAT_ERROR = -2  # 标签格式错误
+        NAME_EMPTY = -3  # 标签名为空
 
         def __str__(self):
             return f'{super(TemplateAnalyzer.CheckCode, self).__str__()} {self.value}'
 
         def is_error(self):
             return self.value < 0
+
+    @staticmethod
+    def _create_check_info(code: CheckCode, msg: str = '', data: dict = None):
+        return {'code': code, 'msg': msg, 'data': data}
 
     @classmethod
     def check_template(cls, file_path: str, insert_operation: callable = is_no_content_point) -> dict:
@@ -75,9 +80,7 @@ class TemplateAnalyzer:
                     # 内容标签格式检查
                     point_split = point.split(':')
                     if len(point_split) != 2:
-                        return {"code": TemplateAnalyzer.CheckCode.LABEL_FORMAT_ERROR,
-                                "msg": f"内容标签'{point}'格式错误，应该为'{{label_type:label_name}}'，label_name 可省略，但不可省略 ':'",
-                                "data": None}
+                        return cls._create_check_info(cls.CheckCode.LABEL_FORMAT_ERROR, f"内容标签'{point}'格式错误，应该为'{{label_type:label_name}}'，label_name 可省略，但不可省略 ':'")
                     point_type, point_name = point_split
                     # 忽略无法识别类型的内容标签
                     if point_type not in cls.insert_point_types:
@@ -88,15 +91,13 @@ class TemplateAnalyzer:
 
                     # 插入点信息处理
                     if not insert_operation(point_data):
+                        if len(point_name) == 0:
+                            return cls._create_check_info(cls.CheckCode.NAME_EMPTY, f"插入点名称为空，内容标签为'{point_data['text']}'，原文为'{point_data['run'].text}'")
                         if point_name in insert_points:
-                            return {"code": TemplateAnalyzer.CheckCode.NAME_REPEAT,
-                                    "msg": f"插入点名称 '{point_name}' 在模板内重复，内容标签为'{point_data['text']}'，原文为'{point_data['run'].text}'",
-                                    "data": None}
+                            return cls._create_check_info(cls.CheckCode.NAME_REPEAT, f"插入点名称 '{point_name}' 在模板内重复，内容标签为'{point_data['text']}'，原文为'{point_data['run'].text}'")
                         insert_points[point_name] = point_data
 
-        return {"code": TemplateAnalyzer.CheckCode.SUCCESS,
-                "msg": "successful",
-                "data": {"document": document, "insert_points": insert_points}}
+        return cls._create_check_info(cls.CheckCode.SUCCESS, 'successful', {'insert_points': insert_points, 'document': document})
 
     @staticmethod
     def print_check_info(check_info: dict, show_detail=False):
@@ -115,4 +116,3 @@ class TemplateAnalyzer:
                     print(f'\t{i + 1}、{p_n}：{p_d["text"]}')
         else:
             print(f'模板校验失败\n\t错误代码：{check_info["code"]}\n\t错误信息：{check_info["msg"]}')
-

@@ -1,6 +1,6 @@
 import time
 from abc import ABCMeta, abstractmethod
-from typing import Any, List
+from typing import Any, List, Sequence
 
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import CT_Tbl
@@ -240,7 +240,7 @@ class ImageLabel(ContentLabel):
     @classmethod
     def check_data_type(cls, data: Any) -> bool:
         """要求data为tuple，第一个元素是描述字符串，第二个元素是图片url"""
-        return isinstance(data, tuple) and len(data) == 2 and (isinstance(data[0], str) or data[0] is None) and isinstance(data[1], str)
+        return isinstance(data, Sequence) and len(data) == 2 and (isinstance(data[0], str) or data[0] is None) and isinstance(data[1], str)
 
 
 LabelManager.register(ImageLabel)
@@ -262,7 +262,7 @@ class LinkLabel(ContentLabel):
     @classmethod
     def check_data_type(cls, data: Any) -> bool:
         """要求data是tuple，第一个元素是链接名称，第二个元素是链接url"""
-        return isinstance(data, tuple) and len(data) == 2 and isinstance(data[0], str) and isinstance(data[1], str)
+        return isinstance(data, Sequence) and len(data) == 2 and isinstance(data[0], str) and isinstance(data[1], str)
 
 
 LabelManager.register(LinkLabel)

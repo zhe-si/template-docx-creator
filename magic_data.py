@@ -14,7 +14,8 @@ class MagicData:
         if doc_name is None:
             doc_name = default
         else:
-            doc_name = doc_name + '.docx'
+            if not doc_name.endswith('.docx'):
+                doc_name = doc_name + '.docx'
         return doc_name
 
     @classmethod

@@ -108,12 +108,14 @@ class DocumentProcessor:
         if tem_path is not None:
             # 指定不在模板库的模板
             tem_n = TemplateManager.add_template(tem_path)
+            # 通过魔法数据传递指定的模板参数
             if tem_n is None or not MagicData.set_tem_name(data, tem_n, is_cover=True):
                 print(f"模板文件路径错误：{tem_path}")
                 return False
 
         # 手动指定生成文件名
         if doc_name is not None:
+            # 通过魔法数据传递指定的文档名称参数
             if not MagicData.set_doc_name(data, doc_name, is_cover=True):
                 print("文档名设置错误")
                 return False

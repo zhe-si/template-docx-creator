@@ -5,7 +5,7 @@ import chardet
 
 def make_sure_path(path: str):
     """
-    Make sure a path exists.
+    Make sure a dir path exists.
     """
     if not os.path.exists(path):
         os.makedirs(path)

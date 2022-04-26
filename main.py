@@ -6,6 +6,7 @@ from doc_processor import DocumentProcessor
 
 
 def write_result_to_file(file_path, result: [str, int, bool]):
+    make_sure_path(os.path.dirname(file_path))
     with open(file_path, 'w') as f:
         f.write(str(result))
 
